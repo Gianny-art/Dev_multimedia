@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Un Jour à l'IUT - Projet Multimedia HTML5</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- SCÈNE PRINCIPALE — tout se joue ici, dès le chargement -->
+    <div id="main-stage" class="main-stage">
+        <svg id="scene-svg" class="scene-svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="2" dy="4" stdDeviation="3" flood-opacity="0.3"/>
+                </filter>
+                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+
+            <!-- Couches de rendu -->
+            <g id="background-layer"></g>
+            <g id="character-layer"></g>
+            <g id="speech-bubble-layer"></g>
+            <g id="effect-layer"></g>
+            <g id="ui-layer"></g>
+        </svg>
+    </div>
+
+    <!-- CARTE CRÉDITS — apparaît pendant la scène d'intro -->
+    <div id="credits-card" class="credits-card">
+        <h3>Une création de</h3>
+        <div class="credits-names">
+            <span>Foapa Gianny</span>
+            <span>Tiemdjo Ryan</span>
+        </div>
+        <p>IUT Bandjoun — Projet Multimédia 2026</p>
+    </div>
+
+    <!-- HUD — toujours accessible, sur l'intro comme sur chaque scène -->
+    <div class="hud-controls">
+        <button id="skip-btn" class="hud-btn" title="Passer cette scène">⏭ Passer</button>
+        <button id="sound-toggle" class="hud-btn icon-btn" title="Couper les voix">🔊</button>
+        <button id="music-toggle" class="hud-btn icon-btn" title="Couper l'ambiance">🎵</button>
+    </div>
+
+    <div id="audio-hint" class="audio-hint">🔈 Cliquez n'importe où pour activer le son</div>
+
+    <!-- SÉLECTEUR DE SCÈNE — remplace la navbar, apparaît après l'intro -->
+    <div id="scene-selector" class="scene-selector">
+        <div class="selector-panel">
+            <h2>Quelle scène voulez-vous découvrir&nbsp;?</h2>
+            <p class="selector-sub">Choisissez la suite de l'histoire — vous pourrez revenir ici à tout moment</p>
+            <div class="selector-grid">
+                <button class="scene-card" data-scene="1" style="--accent:#3D6EDB">
+                    <span class="scene-card-icon">📚</span>
+                    <span class="scene-card-title">Vie Étudiante</span>
+                    <span class="scene-card-desc">Kevin se réveille en retard et découvre que l'IA n'explique rien à sa place.</span>
+                    <span class="scene-card-duration">≈ 80 secondes</span>
+                </button>
+                <button class="scene-card" data-scene="2" style="--accent:#3FA34D">
+                    <span class="scene-card-icon">♻️</span>
+                    <span class="scene-card-title">Le Grand Nettoyage</span>
+                    <span class="scene-card-desc">Aline déclenche une véritable opération de tri et de recyclage sur le campus.</span>
+                    <span class="scene-card-duration">≈ 90 secondes</span>
+                </button>
+                <button class="scene-card" data-scene="3" style="--accent:#7E57C2">
+                    <span class="scene-card-icon">🤖</span>
+                    <span class="scene-card-title">IA et Études</span>
+                    <span class="scene-card-desc">Un entretien d'embauche tourne mal pour celui qui ne sait plus rien faire sans IA.</span>
+                    <span class="scene-card-duration">≈ 80 secondes</span>
+                </button>
+                <button class="scene-card" data-scene="4" style="--accent:#E8A33D">
+                    <span class="scene-card-icon">🎬</span>
+                    <span class="scene-card-title">Les Coulisses</span>
+                    <span class="scene-card-desc">Comment cette animation a été construite, couche par couche, sans framework.</span>
+                    <span class="scene-card-duration">≈ 70 secondes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+/* ============================================
+   STYLE.CSS — "Un Jour à l'IUT"
+   Projet Multimedia HTML5 — IUT Bandjoun 2026
+   Auteurs : Foapa Gianny & Tiemdjo Ryan
+   ============================================
+   L'expérience démarre directement sur la scène
+   d'intro (pas de page d'accueil "site web").
+   Un sélecteur de scène (overlay) remplace la
+   navbar pour choisir la suite de l'histoire.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ============================================
+   RESET & VARIABLES
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --font-display: 'Baloo 2', 'Segoe UI', sans-serif;
+    --font-body: 'Inter', 'Segoe UI', sans-serif;
+    --ink: #1d2230;
+    --paper: #FAF6EE;
+    --accent-blue: #3D6EDB;
+    --accent-green: #3FA34D;
+    --accent-amber: #E8A33D;
+    --accent-purple: #7E57C2;
+    --stage-bg: #10131c;
+}
+
+html, body {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    font-family: var(--font-body);
+    background: var(--stage-bg);
+    color: var(--ink);
+}
+
+/* ============================================
+   SCÈNE PRINCIPALE — Plein écran, sans navbar
+   ============================================ */
+
+.main-stage {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    background: #000;
+    transition: filter 0.4s ease, opacity 0.4s ease;
+}
+
+.main-stage.dimmed {
+    filter: blur(6px) brightness(0.55);
+}
+
+#scene-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#background-layer { z-index: 1; }
+#character-layer { z-index: 2; }
+#speech-bubble-layer { z-index: 3; }
+#effect-layer { z-index: 4; }
+#ui-layer { z-index: 5; }
+
+/* ============================================
+   HUD — Passer / Son / Musique
+   ============================================ */
+
+.hud-controls {
+    position: fixed;
+    top: 22px;
+    right: 22px;
+    display: flex;
+    gap: 10px;
+    z-index: 600;
+}
+
+.hud-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 46px;
+    padding: 0 16px;
+    border-radius: 23px;
+    border: none;
+    background: rgba(16, 19, 28, 0.72);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.hud-btn:hover {
+    transform: translateY(-2px);
+    background: rgba(16, 19, 28, 0.9);
+}
+
+.hud-btn:active {
+    transform: translateY(0);
+}
+
+.hud-btn.icon-btn {
+    width: 46px;
+    padding: 0;
+    justify-content: center;
+    font-size: 19px;
+}
+
+.hud-btn.muted {
+    background: rgba(220, 60, 60, 0.55);
+}
+
+.hud-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================
+   INDICE AUDIO (déblocage navigateur)
+   ============================================ */
+
+.audio-hint {
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(16, 19, 28, 0.78);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    z-index: 600;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.audio-hint.hidden {
+    opacity: 0;
+}
+
+/* ============================================
+   SÉLECTEUR DE SCÈNE (remplace la navbar)
+   ============================================ */
+
+.scene-selector {
+    position: fixed;
+    inset: 0;
+    z-index: 800;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(8, 9, 14, 0.6);
+    backdrop-filter: blur(2px);
+    animation: selectorFadeIn 0.5s ease;
+}
+
+.scene-selector.active {
+    display: flex;
+}
+
+@keyframes selectorFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.selector-panel {
+    width: min(920px, 92vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    background: var(--paper);
+    border-radius: 22px;
+    padding: 44px 48px 38px;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+    text-align: center;
+}
+
+.selector-panel h2 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    color: var(--ink);
+    margin-bottom: 8px;
+}
+
+.selector-sub {
+    font-size: 15px;
+    color: #6b6f7d;
+    margin-bottom: 32px;
+}
+
+.selector-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.scene-card {
+    --accent: #3D6EDB;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    text-align: left;
+    background: #fff;
+    border: none;
+    border-left: 6px solid var(--accent);
+    border-radius: 14px;
+    padding: 22px 22px 20px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    box-shadow: 0 6px 18px rgba(20, 20, 30, 0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.scene-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 32px rgba(20, 20, 30, 0.18);
+}
+
+.scene-card-icon {
+    font-size: 30px;
+    line-height: 1;
+}
+
+.scene-card-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink);
+}
+
+.scene-card-desc {
+    font-size: 13px;
+    color: #6b6f7d;
+    line-height: 1.4;
+}
+
+.scene-card-duration {
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 720px) {
+    .selector-grid { grid-template-columns: 1fr; }
+    .selector-panel { padding: 32px 24px 28px; }
+}
+
+/* ============================================
+   CARTE CRÉDITS (équipe du projet)
+   ============================================ */
+
+.credits-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 700;
+    background: rgba(250, 246, 238, 0.97);
+    border-radius: 18px;
+    padding: 30px 46px;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.credits-card.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.credits-card h3 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6b6f7d;
+    margin-bottom: 10px;
+}
+
+.credits-names {
+    display: flex;
+    gap: 26px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.credits-names span {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--accent-blue);
+}
+
+.credits-card p {
+    font-size: 12px;
+    color: #8a8f9c;
+}
+
+/* ============================================
+   COUCHES SVG — Personnages
+   ============================================ */
+
+.character {
+    /* Le déplacement (translate) est géré exclusivement
+       en JS sur l'attribut transform du groupe ; aucune
+       classe CSS ne doit animer le transform de .character
+       pour éviter tout conflit avec sa position. */
+}
+
+text.dialogue {
+    font-size: 18px;
+    font-weight: 600;
+    fill: #333;
+}
+
+text.character-label {
+    font-size: 14px;
+    font-weight: 700;
+    fill: #1a1a1a;
+}
+
+/* ============================================
+   BULLES DE DISCOURS
+   ============================================ */
+
+.speech-bubble {
+    fill: #FFFACD;
+    stroke: #2b2b2b;
+    stroke-width: 2;
+    filter: drop-shadow(2px 3px 5px rgba(0,0,0,0.25));
+}
+
+.speech-bubble-pointer {
+    fill: #FFFACD;
+    stroke: #2b2b2b;
+    stroke-width: 2;
+}
+
+.speech-bubble-text {
+    font-size: 16px;
+    font-weight: 500;
+    fill: #1a1a1a;
+    font-family: var(--font-body);
+}
+
+.bin-label {
+    font-family: var(--font-body);
+}
+
+/* ============================================
+   ANIMATIONS LOCALES (sans conflit de position)
+   ============================================
+   Ces classes ciblent uniquement des éléments
+   SANS attribut transform positionnel propre
+   (membres, bulles, particules) — jamais le
+   groupe racine d'un personnage ou d'un décor.
+*/
+
+@keyframes leg-swing-left {
+    0%, 100% { transform: rotate(0deg); transform-origin: 50% 0%; }
+    50% { transform: rotate(-22deg); transform-origin: 50% 0%; }
+}
+
+@keyframes leg-swing-right {
+    0%, 100% { transform: rotate(0deg); transform-origin: 50% 0%; }
+    50% { transform: rotate(22deg); transform-origin: 50% 0%; }
+}
+
+@keyframes arm-swing-left {
+    0%, 100% { transform: rotate(0deg); transform-origin: 50% 0%; }
+    50% { transform: rotate(22deg); transform-origin: 50% 0%; }
+}
+
+@keyframes arm-swing-right {
+    0%, 100% { transform: rotate(0deg); transform-origin: 50% 0%; }
+    50% { transform: rotate(-22deg); transform-origin: 50% 0%; }
+}
+
+@keyframes wave-right {
+    0%, 100% { transform: rotate(-10deg); transform-origin: 50% 0%; }
+    50% { transform: rotate(-55deg); transform-origin: 50% 0%; }
+}
+
+@keyframes mouth-speak {
+    0%, 100% { ry: 3px; }
+    50% { ry: 9px; }
+}
+
+@keyframes eye-blink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    95% { transform: scaleY(0.05); }
+}
+
+@keyframes bubble-pop-in {
+    0% { transform: scale(0.3) translate(0, 20px); opacity: 0; }
+    100% { transform: scale(1) translate(0, 0); opacity: 1; }
+}
+
+@keyframes sparkle-fade {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes smoke-drift {
+    0% { opacity: 0.55; r: 14; }
+    100% { opacity: 0; r: 34; }
+}
+
+.leg-animate-left { animation: leg-swing-left 0.7s ease-in-out infinite !important; }
+.leg-animate-right { animation: leg-swing-right 0.7s ease-in-out infinite !important; }
+.arm-animate-left { animation: arm-swing-left 0.7s ease-in-out infinite !important; }
+.arm-animate-right { animation: arm-swing-right 0.7s ease-in-out infinite !important; }
+.arm-wave { animation: wave-right 0.55s ease-in-out infinite !important; }
+.mouth-animate { animation: mouth-speak 0.35s ease-in-out infinite !important; }
+.eye-animate { animation: eye-blink 5s ease-in-out infinite !important; }
+.bubble-show { animation: bubble-pop-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important; }
+.sparkle-fx { animation: sparkle-fade 0.7s ease-out forwards !important; }
+.smoke-puff { animation: smoke-drift 2.4s ease-out infinite !important; }
+
+/* ============================================
+   TRANSITIONS DE DÉCOR
+   ============================================ */
+
+@keyframes fadeInScene {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.scene-fade-in {
+    animation: fadeInScene 0.6s ease;
+}
+
+/* ============================================
+   SCROLLBAR (panneau sélecteur)
+   ============================================ */
+
+.selector-panel::-webkit-scrollbar { width: 8px; }
+.selector-panel::-webkit-scrollbar-track { background: transparent; }
+.selector-panel::-webkit-scrollbar-thumb { background: #cfc7b4; border-radius: 4px; }
+
+@media print {
+    body { display: none; }
+}
