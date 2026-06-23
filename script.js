@@ -1115,7 +1115,7 @@ async function scene0_Intro() {
     await say(presenter, "Je suis ravi de vous présenter notre projet de développement multimédia, entièrement codé en HTML5, SVG et JavaScript.");
 
     showCreditsCard();
-    await say(presenter, "Ce projet a été conçu et développé par des étudiants de l'IUT de Bandjoun : le Groupe 14.");
+    await say(presenter, "Ce projet a été conçu et développé par des étudiants de l'IUT de Bandjoun : le Groupe 4.");
     await delay(1800);
     hideCreditsCard();
 
