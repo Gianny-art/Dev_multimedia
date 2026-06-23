@@ -2,7 +2,7 @@
  * ============================================
  * SCRIPT.JS — Moteur d'Animation Multimedia
  * "Un Jour à l'IUT" — Projet IUT Bandjoun 2026
- * Auteurs : Foapa Gianny & Tiemdjo Ryan
+ * Réalisé par le Groupe 14
  * ============================================
  *
  * Architecture :
@@ -64,18 +64,18 @@ const STATE = {
 
 const VOICES_CONFIG = {
     kevin: { gender: 'male', pitch: 1.0, rate: 0.98 },
-    nadia: { gender: 'female', pitch: 1.25, rate: 1.0 },
-    brice: { gender: 'male', pitch: 0.85, rate: 1.02 },
-    aline: { gender: 'female', pitch: 1.15, rate: 0.97 },
+    nadia: { gender: 'female', pitch: 1.15, rate: 1.0 },
+    brice: { gender: 'male', pitch: 0.9, rate: 1.02 },
+    aline: { gender: 'female', pitch: 1.1, rate: 0.97 },
     junior: { gender: 'male', pitch: 0.95, rate: 1.0 },
-    carine: { gender: 'female', pitch: 1.2, rate: 0.98 },
+    carine: { gender: 'female', pitch: 1.12, rate: 0.98 },
     eleve1: { gender: 'male', pitch: 1.05, rate: 1.0 },
-    eleve2: { gender: 'female', pitch: 1.18, rate: 0.98 },
-    tchoumi: { gender: 'male', pitch: 0.75, rate: 0.92 },
+    eleve2: { gender: 'female', pitch: 1.1, rate: 0.98 },
+    tchoumi: { gender: 'male', pitch: 0.85, rate: 0.92 },
     recruteur: { gender: 'male', pitch: 0.9, rate: 0.95 },
     candidat2: { gender: 'male', pitch: 1.05, rate: 1.05 },
     presenter: { gender: 'male', pitch: 1.0, rate: 0.95 },
-    professeur: { gender: 'female', pitch: 1.2, rate: 0.93 }
+    professeur: { gender: 'female', pitch: 1.12, rate: 0.93 }
 };
 
 function delay(ms) {
@@ -367,11 +367,40 @@ function pickFrenchVoice(gender) {
     if (!cachedVoices.length) refreshVoiceCache();
     const frVoices = cachedVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith('fr'));
     if (!frVoices.length) return null;
-    const femaleHints = ['amelie', 'amélie', 'audrey', 'virginie', 'celine', 'céline', 'marie', 'female', 'hortense'];
-    const maleHints = ['thomas', 'nicolas', 'male', 'daniel', 'henri'];
-    const hints = gender === 'female' ? femaleHints : maleHints;
-    const match = frVoices.find(v => hints.some(h => v.name.toLowerCase().includes(h)));
-    return match || frVoices[0];
+
+    const femaleHints = ['amelie', 'amélie', 'audrey', 'virginie', 'celine', 'céline', 'marie', 'denise', 'eloise', 'éloise', 'female', 'hortense', 'julie'];
+    const maleHints = ['thomas', 'nicolas', 'henri', 'male', 'daniel', 'paul', 'antoine'];
+    const genderHints = gender === 'female' ? femaleHints : maleHints;
+
+    // On note chaque voix disponible pour préférer automatiquement les
+    // moteurs neuronaux (beaucoup plus humains) quand ils existent sur
+    // l'appareil de la personne qui regarde l'animation, sans dépendre
+    // d'un service payant ni d'une connexion particulière.
+    function score(v) {
+        const n = v.name.toLowerCase();
+        let s = 0;
+        if (n.includes('online') || n.includes('natural') || n.includes('neural')) s += 5; // voix neuronales (ex. Edge)
+        if (n.includes('enhanced') || n.includes('premium')) s += 4; // voix « améliorées » (ex. macOS)
+        if (genderHints.some(h => n.includes(h))) s += 2;
+        if (n.includes('desktop') || n.includes('compact')) s -= 2; // anciennes voix robotiques
+        if (v.localService === false) s += 1; // souvent un indice de voix cloud de meilleure qualité
+        return s;
+    }
+
+    const sorted = frVoices.slice().sort((a, b) => score(b) - score(a));
+    return sorted[0];
+}
+
+// Une voix est choisie UNE SEULE FOIS par nom de personnage, puis figée pour
+// toute la durée de l'expérience (même d'une scène à l'autre, même si le
+// navigateur met à jour sa liste de voix en cours de route). C'est ce qui
+// garantit qu'un même personnage ne change jamais de voix.
+const characterVoiceAssignments = {};
+function getVoiceForCharacter(name, gender) {
+    if (characterVoiceAssignments[name]) return characterVoiceAssignments[name];
+    const voice = pickFrenchVoice(gender);
+    if (voice) characterVoiceAssignments[name] = voice;
+    return voice || null;
 }
 
 class Character {
@@ -450,32 +479,64 @@ class Character {
         // 'bald' ou autre → pas de cheveux dessinés
     }
 
-    speak(text, duration) {
-        if (STATE.skipScene) return;
+    speak(text, fallbackDuration) {
+        if (STATE.skipScene) return Promise.resolve();
         this.isSpeaking = true;
         const mouth = this.group.querySelector(`#mouth-${this.name}`);
         if (mouth) mouth.classList.add('mouth-animate');
-        if (STATE.soundEnabled) this.speakFrench(text);
-        setTimeout(() => this.stopSpeaking(), duration);
-    }
 
-    speakFrench(text) {
-        try {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'fr-FR';
-            const cfg = VOICES_CONFIG[this.name] || { gender: 'male', pitch: 1.0, rate: 0.98 };
-            utterance.pitch = cfg.pitch;
-            utterance.rate = cfg.rate;
-            const voice = pickFrenchVoice(cfg.gender);
-            if (voice) utterance.voice = voice;
-            window.speechSynthesis.speak(utterance);
-        } catch (e) { /* synthèse vocale indisponible — l'histoire continue avec les sous-titres */ }
-    }
+        const stop = () => {
+            this.isSpeaking = false;
+            if (mouth) { mouth.classList.remove('mouth-animate'); mouth.setAttribute('ry', '4'); }
+        };
 
-    stopSpeaking() {
-        this.isSpeaking = false;
-        const mouth = this.group.querySelector(`#mouth-${this.name}`);
-        if (mouth) { mouth.classList.remove('mouth-animate'); mouth.setAttribute('ry', '4'); }
+        if (!STATE.soundEnabled) {
+            // Pas de voix active : on garde un délai de lecture pour le sous-titre.
+            return new Promise(resolve => {
+                const entry = { resolve: null, timeoutId: null };
+                entry.resolve = () => { clearTimeout(entry.timeoutId); stop(); resolve(); };
+                entry.timeoutId = setTimeout(entry.resolve, fallbackDuration);
+                STATE.pendingDelays.push(entry);
+            });
+        }
+
+        return new Promise(resolve => {
+            let done = false;
+            const entry = { resolve: null, timeoutId: null };
+            const finish = () => {
+                if (done) return;
+                done = true;
+                clearTimeout(entry.timeoutId);
+                STATE.pendingDelays = STATE.pendingDelays.filter(e => e !== entry);
+                stop();
+                resolve();
+            };
+            entry.resolve = finish;
+
+            try {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'fr-FR';
+                const cfg = VOICES_CONFIG[this.name] || { gender: 'male', pitch: 1.0, rate: 0.98 };
+                utterance.pitch = cfg.pitch;
+                utterance.rate = cfg.rate;
+                const voice = getVoiceForCharacter(this.name, cfg.gender);
+                if (voice) utterance.voice = voice;
+                // La bulle/animation de bouche ne se termine qu'au véritable
+                // événement de fin de parole : c'est ce qui garantit que le
+                // son et l'action restent synchronisés, réplique après réplique.
+                utterance.onend = finish;
+                utterance.onerror = finish;
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {
+                finish();
+                return;
+            }
+
+            // Filet de sécurité : si le moteur vocal ne déclenche jamais
+            // onend (certains navigateurs/extensions), l'histoire continue.
+            entry.timeoutId = setTimeout(finish, Math.max(fallbackDuration * 2, 8000));
+            STATE.pendingDelays.push(entry);
+        });
     }
 
     blink() {
@@ -601,22 +662,20 @@ class SpeechBubble {
     }
 
     show() {
-        if (STATE.skipScene) return;
         LAYERS.bubble().appendChild(this.bubble);
-        this.character.speak(this.text, this.duration);
     }
 
     hide() {
-        this.character.stopSpeaking();
         if (this.bubble.parentNode) this.bubble.parentNode.removeChild(this.bubble);
     }
 }
 
 async function say(character, text) {
+    if (STATE.skipScene) return;
     const bubble = new SpeechBubble(character, text);
     character.blink();
     bubble.show();
-    await delay(bubble.duration);
+    await character.speak(text, bubble.duration);
     bubble.hide();
     await delay(450);
 }
@@ -1056,7 +1115,7 @@ async function scene0_Intro() {
     await say(presenter, "Je suis ravi de vous présenter notre projet de développement multimédia, entièrement codé en HTML5, SVG et JavaScript.");
 
     showCreditsCard();
-    await say(presenter, "Ce projet a été conçu et développé par deux étudiants de l'IUT de Bandjoun : Foapa Gianny et Tiemdjo Ryan.");
+    await say(presenter, "Ce projet a été conçu et développé par des étudiants de l'IUT de Bandjoun : le Groupe 14.");
     await delay(1800);
     hideCreditsCard();
 
@@ -1319,7 +1378,7 @@ async function scene4_BehindScenes() {
     await say(professeur, "Aucun framework, aucune image, aucun son préenregistré... voilà qui est remarquable.");
 
     showCreditsCard();
-    await say(presenter, "Ce projet a été pensé et codé par Foapa Gianny et Tiemdjo Ryan, à l'IUT de Bandjoun.");
+    await say(presenter, "Ce projet a été pensé et codé par le Groupe 14, à l'IUT de Bandjoun.");
     await delay(1600);
     hideCreditsCard();
 
